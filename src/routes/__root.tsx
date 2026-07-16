@@ -135,10 +135,6 @@ function RootComponent() {
       {/* Desktop limitation screen */}
       <div className="hidden md:flex flex-col items-center justify-center min-h-screen bg-background text-foreground p-8 text-center">
         <div className="max-w-md space-y-6 flex flex-col items-center">
-          <div className="grid h-14 w-14 place-items-center rounded-full bg-accent text-accent-foreground shadow-sm">
-            <Smartphone className="h-6 w-6" strokeWidth={2} />
-          </div>
-
           <div className="space-y-2">
             <h1 className="text-3xl font-bold tracking-tight">Mobile Only Experience</h1>
             <p className="text-sm text-muted-foreground leading-relaxed">
