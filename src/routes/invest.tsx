@@ -4,6 +4,7 @@ import { ChevronLeft, Check, ArrowUpRight } from "lucide-react";
 import { tickerLogo } from "@/lib/logos";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/PageHeader";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   getTickets,
   getWithdrawals,
@@ -166,6 +167,7 @@ function InvestPage() {
   const [submitting, setSubmitting] = useState(false);
   const [balance, setBalance] = useState(0);
   const [user, setUser] = useState<any>(null);
+  const [investments, setInvestments] = useState<any[]>([]);
 
   // Compute live balance
   useEffect(() => {
@@ -182,15 +184,17 @@ function InvestPage() {
     checkAuth();
     
     async function loadData() {
-      const [userData, balanceData] = await Promise.all([
+      const [userData, balanceData, investmentsData] = await Promise.all([
         getUser(),
         getBalance(),
+        getInvestments(),
       ]);
       setUser(userData);
       setBalance(balanceData);
+      setInvestments(investmentsData);
     }
     loadData();
-  }, [step, selectedId, navigate]);
+  }, []);
 
   async function purchasePackage(pkg: Pkg) {
     if (balance < pkg.price) return;
@@ -309,7 +313,7 @@ function InvestPage() {
           <div className="pt-6">
             <Button
               onClick={() => navigate({ to: "/" })}
-              className="w-full rounded-full h-11 bg-accent text-accent-foreground hover:brightness-105 shadow-none transition-colors"
+              className="w-full rounded-full h-11 bg-black text-white hover:bg-gray-900 shadow-none transition-colors"
             >
               Back to portfolio
             </Button>
@@ -322,6 +326,7 @@ function InvestPage() {
   if (selectedId) {
     const chosen = packages.find((p) => p.id === selectedId)!;
     const hasEnough = balance >= chosen.price;
+    const activeInvestment = investments.find(inv => inv.packageId === chosen.id && inv.status === 'active');
 
     return (
       <div className="phone-frame flex flex-col bg-background">
@@ -349,6 +354,28 @@ function InvestPage() {
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Cost to invest</p>
             <p className="text-4xl font-extrabold tracking-tight text-foreground">GH₵{chosen.price.toLocaleString()}</p>
           </div>
+
+          {/* Active Investment Progress */}
+          {activeInvestment && (
+            <div className="border border-indigo-500 bg-indigo-50/50 rounded-lg p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-indigo-900">Active Investment</span>
+                <span className="text-xs font-semibold text-indigo-600">
+                  {Math.floor((Date.now() - activeInvestment.createdAt) / (1000 * 60 * 60 * 24))} / {parseInt(chosen.duration)} days
+                </span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Invested</span>
+                <span className="font-semibold">GH₵{activeInvestment.amount.toLocaleString()}</span>
+              </div>
+              <div className="h-1.5 bg-indigo-200 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-indigo-500 transition-all duration-300"
+                  style={{ width: `${Math.min(100, Math.floor((Date.now() - activeInvestment.createdAt) / (1000 * 60 * 60 * 24)) / parseInt(chosen.duration) * 100)}%` }}
+                />
+              </div>
+            </div>
+          )}
 
           {/* Three-Card Stats Grid */}
           <div className="grid grid-cols-3 gap-2.5">
@@ -425,8 +452,8 @@ function InvestPage() {
             <Button
               onClick={() => purchasePackage(chosen)}
               disabled={!hasEnough || submitting}
-              className={`w-full rounded-full h-11 text-accent-foreground hover:brightness-105 shadow-none transition-colors ${
-                hasEnough ? "bg-accent" : "bg-red-100 border border-red-200 text-red-600 hover:bg-red-100 cursor-not-allowed"
+              className={`w-full rounded-full h-11 text-white hover:bg-gray-900 shadow-none transition-colors ${
+                hasEnough ? "bg-black" : "bg-red-100 border border-red-200 text-red-600 hover:bg-red-100 cursor-not-allowed"
               }`}
             >
               {submitting
@@ -468,11 +495,14 @@ function InvestPage() {
 
         <ul className="space-y-2.5">
           {packages.map((p) => {
+            const activeInvestment = investments.find(inv => inv.packageId === p.id && inv.status === 'active');
             return (
               <li key={p.id}>
                 <button
                   onClick={() => setSelectedId(p.id)}
-                  className="w-full rounded-2xl border border-border p-4 text-left hover:border-foreground transition flex items-center justify-between group"
+                  className={`w-full rounded-2xl border p-4 text-left hover:border-foreground transition flex items-center justify-between group ${
+                    activeInvestment ? 'border-indigo-500 bg-indigo-50/50' : 'border-border'
+                  }`}
                 >
                   <div className="flex-1 min-w-0 pr-3">
                     <div className="flex items-center gap-2">
@@ -480,6 +510,11 @@ function InvestPage() {
                       <span className="text-xs font-semibold px-2 py-0.5 bg-accent/20 text-accent-foreground rounded-full">
                         GH₵{p.price}
                       </span>
+                      {activeInvestment && (
+                        <span className="text-xs font-semibold px-2 py-0.5 bg-indigo-500 text-white rounded-full">
+                          Active
+                        </span>
+                      )}
                     </div>
                     <p className="mt-0.5 text-xs text-muted-foreground truncate">{p.tagline}</p>
                     

@@ -3,6 +3,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { PageHeader } from "@/components/PageHeader";
 import { getTickets, type DepositTicket } from "@/lib/store";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { networkLogo } from "@/lib/logos";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
@@ -33,7 +34,7 @@ function TicketsPage() {
       setTickets(ticketsData);
     }
     loadTickets();
-  }, [navigate]);
+  }, []);
 
   return (
     <div className="phone-frame flex flex-col bg-background">
@@ -53,7 +54,7 @@ function TicketsPage() {
             <p className="text-sm font-semibold text-foreground">No deposit tickets yet.</p>
             <p className="text-xs text-muted-foreground">Fund your portfolio to get started.</p>
             <div className="pt-2">
-              <Button asChild className="rounded-sm h-11 bg-accent text-accent-foreground hover:brightness-105 shadow-none transition-colors">
+              <Button asChild className="rounded-sm h-11 bg-black text-white hover:bg-gray-900 shadow-none transition-colors">
                 <Link to="/deposit">Create a deposit</Link>
               </Button>
             </div>

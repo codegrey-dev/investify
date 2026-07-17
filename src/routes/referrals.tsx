@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Copy, Users, DollarSign, TrendingUp, Gift, Check } from "lucide-react";
 import { getReferralCode, getReferrals, getReferralEarnings } from "@/lib/store";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
@@ -23,6 +24,7 @@ function ReferralsPage() {
   const [referrals, setReferrals] = useState<any[]>([]);
   const [earnings, setEarnings] = useState<any[]>([]);
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -61,12 +63,55 @@ function ReferralsPage() {
     }
     
     loadData();
-  }, [navigate]);
+  }, []);
 
   function copyReferralCode() {
-    navigator.clipboard?.writeText(referralCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    console.log('copyReferralCode called', referralCode);
+    if (!referralCode) return;
+    
+    // Fallback method for browsers that don't support clipboard API
+    const textArea = document.createElement('textarea');
+    textArea.value = referralCode;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.select();
+    
+    try {
+      document.execCommand('copy');
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      console.log('Code copied successfully');
+    } catch (err) {
+      console.error('Failed to copy code:', err);
+    } finally {
+      document.body.removeChild(textArea);
+    }
+  }
+
+  function copyReferralLink() {
+    console.log('copyReferralLink called', referralCode);
+    if (!referralCode) return;
+    const link = `${window.location.origin}/sign-up?ref=${referralCode}`;
+    
+    // Fallback method for browsers that don't support clipboard API
+    const textArea = document.createElement('textarea');
+    textArea.value = link;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.select();
+    
+    try {
+      document.execCommand('copy');
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+      console.log('Link copied successfully');
+    } catch (err) {
+      console.error('Failed to copy link:', err);
+    } finally {
+      document.body.removeChild(textArea);
+    }
   }
 
   const totalEarnings = earnings.reduce((sum, e) => sum + e.amount, 0);
@@ -77,8 +122,16 @@ function ReferralsPage() {
     return (
       <div className="phone-frame flex flex-col bg-background min-h-screen select-none">
         <PageHeader title="Referrals" subtitle="Earn rewards" backTo="/more" />
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-sm text-muted-foreground">Loading...</p>
+        <div className="flex-1 px-5 pt-4 pb-8 space-y-4">
+          <div className="flex gap-4">
+            <Skeleton className="flex-1 h-16 rounded-sm" />
+            <Skeleton className="flex-1 h-16 rounded-sm" />
+          </div>
+          <Skeleton className="h-12 w-full rounded-sm" />
+          <div className="flex gap-4">
+            <Skeleton className="flex-1 h-16 rounded-sm" />
+            <Skeleton className="flex-1 h-16 rounded-sm" />
+          </div>
         </div>
       </div>
     );
@@ -88,142 +141,112 @@ function ReferralsPage() {
     <div className="phone-frame flex flex-col bg-background min-h-screen select-none">
       <PageHeader title="Referrals" subtitle="Earn rewards" backTo="/more" />
 
-      <div className="flex-1 px-5 pt-4 pb-8 space-y-6 overflow-y-auto">
-        {/* Referral Code Card */}
-        <Card className="border-border shadow-none">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-bold">Your Referral Code</CardTitle>
-            <CardDescription className="text-xs">Share this code with friends to earn rewards</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center space-x-2">
-              <div className="flex-1 bg-muted rounded-sm px-4 py-3 font-mono font-bold text-lg tracking-wider">
-                {referralCode || "Loading..."}
-              </div>
-              <Button
-                onClick={copyReferralCode}
-                variant="outline"
-                size="icon"
-                className="rounded-sm h-11 w-11"
-              >
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 gap-3">
-          <Card className="border-border shadow-none">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-bold text-muted-foreground">Total Referrals</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center space-x-2">
-                <Users className="h-5 w-5 text-primary" />
-                <span className="text-2xl font-bold">{referrals.length}</span>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-border shadow-none">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-bold text-muted-foreground">Total Earnings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center space-x-2">
-                <DollarSign className="h-5 w-5 text-primary" />
-                <span className="text-2xl font-bold">${totalEarnings.toFixed(2)}</span>
-              </div>
-            </CardContent>
-          </Card>
+      <div className="flex-1 px-5 pt-4 pb-8 space-y-4 overflow-y-auto">
+        {/* Stats Row */}
+        <div className="flex gap-4">
+          <div className="flex-1 text-center py-3 bg-muted/50 rounded-sm">
+            <Users className="h-5 w-5 mx-auto text-primary mb-1" />
+            <p className="text-xs text-muted-foreground">Referrals</p>
+            <p className="text-xl font-bold">{referrals.length}</p>
+          </div>
+          <div className="flex-1 text-center py-3 bg-muted/50 rounded-sm">
+            <DollarSign className="h-5 w-5 mx-auto text-primary mb-1" />
+            <p className="text-xs text-muted-foreground">Earnings</p>
+            <p className="text-xl font-bold">${totalEarnings.toFixed(2)}</p>
+          </div>
         </div>
 
-        {/* Earnings Breakdown */}
-        <Card className="border-border shadow-none">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-bold">Earnings Breakdown</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Gift className="h-4 w-4 text-primary" />
-                <span className="text-sm">Initial Bonuses (5%)</span>
-              </div>
-              <span className="text-sm font-bold">${initialEarnings.toFixed(2)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <TrendingUp className="h-4 w-4 text-primary" />
-                <span className="text-sm">Daily Interest (1%)</span>
-              </div>
-              <span className="text-sm font-bold">${dailyEarnings.toFixed(2)}</span>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Referral Code - Simplified */}
+        <div className="text-center py-4">
+          <p className="text-xs text-muted-foreground mb-2">Your referral code</p>
+          <div className="flex items-center justify-center gap-2">
+            <span className="font-mono font-bold text-3xl tracking-wider">
+              {referralCode || "Loading..."}
+            </span>
+            <Button
+              onClick={copyReferralCode}
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+            >
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            </Button>
+          </div>
+        </div>
+
+        {/* Referral Link */}
+        <div className="flex items-center gap-2">
+          <div className="flex-1 border border-border rounded-[10px] py-3 px-3 text-xs font-mono truncate">
+            {referralCode ? `${window.location.origin}/sign-up?ref=${referralCode}` : "Loading..."}
+          </div>
+          <Button
+            onClick={copyReferralLink}
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 shrink-0 border border-border rounded-[10px]"
+          >
+            {linkCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+          </Button>
+        </div>
+
+        {/* Earnings Breakdown - Side by Side */}
+        <div className="flex gap-4">
+          <div className="flex-1 bg-muted/50 rounded-sm p-3 text-center">
+            <Gift className="h-5 w-5 mx-auto text-primary mb-1" />
+            <p className="text-xs text-muted-foreground">Initial (5%)</p>
+            <p className="text-lg font-bold">${initialEarnings.toFixed(2)}</p>
+          </div>
+          <div className="flex-1 bg-muted/50 rounded-sm p-3 text-center">
+            <TrendingUp className="h-5 w-5 mx-auto text-primary mb-1" />
+            <p className="text-xs text-muted-foreground">Daily (1%)</p>
+            <p className="text-lg font-bold">${dailyEarnings.toFixed(2)}</p>
+          </div>
+        </div>
 
         {/* Recent Referrals */}
         {referrals.length > 0 && (
-          <Card className="border-border shadow-none">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-bold">Recent Referrals</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {referrals.slice(0, 5).map((referral) => (
-                  <div key={referral.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                    <div className="flex items-center space-x-2">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">User {referral.referredId.slice(0, 8)}</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(referral.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <div className="space-y-2">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Recent Referrals</p>
+            <div className="space-y-1">
+              {referrals.slice(0, 5).map((referral) => (
+                <div key={referral.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                  <span className="text-sm">User {referral.referredId.slice(0, 8)}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(referral.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* Recent Earnings */}
         {earnings.length > 0 && (
-          <Card className="border-border shadow-none">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-bold">Recent Earnings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {earnings.slice(0, 5).map((earning) => (
-                  <div key={earning.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                    <div className="flex items-center space-x-2">
-                      <DollarSign className="h-4 w-4 text-primary" />
-                      <span className="text-sm">{earning.type === 'initial' ? 'Initial Bonus' : 'Daily Interest'}</span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-sm font-bold">${earning.amount.toFixed(2)}</span>
-                      <div className="text-xs text-muted-foreground">
-                        {new Date(earning.createdAt).toLocaleDateString()}
-                      </div>
+          <div className="space-y-2">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Recent Earnings</p>
+            <div className="space-y-1">
+              {earnings.slice(0, 5).map((earning) => (
+                <div key={earning.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                  <span className="text-sm">{earning.type === 'initial' ? 'Initial Bonus' : 'Daily Interest'}</span>
+                  <div className="text-right">
+                    <span className="text-sm font-bold">${earning.amount.toFixed(2)}</span>
+                    <div className="text-xs text-muted-foreground">
+                      {new Date(earning.createdAt).toLocaleDateString()}
                     </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* How it works */}
-        <Card className="border-border shadow-none bg-muted/50">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-bold">How it works</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-xs text-muted-foreground">
-            <p>1. Share your referral code with friends</p>
-            <p>2. When they sign up and invest, you get 5% of their investment amount</p>
-            <p>3. Every day, you earn 1% of their active investment value</p>
-            <p>4. Earnings are automatically added to your balance</p>
-          </CardContent>
-        </Card>
+        <div className="bg-muted/50 rounded-sm p-4 space-y-1">
+          <p className="text-xs font-bold text-foreground">How it works</p>
+          <p className="text-xs text-muted-foreground">1. Share your code with friends</p>
+          <p className="text-xs text-muted-foreground">2. Get 5% when they invest</p>
+          <p className="text-xs text-muted-foreground">3. Earn 1% daily on their investments</p>
+        </div>
       </div>
     </div>
   );

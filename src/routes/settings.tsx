@@ -37,7 +37,7 @@ function SettingsPage() {
       if (u) setLocal({ phone: "", avatarUrl: "", ...u });
     }
     loadUser();
-  }, [navigate]);
+  }, []);
 
   async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -180,7 +180,7 @@ function SettingsPage() {
             </div>
             <Button
               type="submit"
-              className="w-full rounded-full h-11 mt-4 bg-accent text-accent-foreground hover:brightness-105 shadow-none transition-colors"
+              className="w-full rounded-full h-11 mt-4 bg-black text-white hover:bg-gray-900 shadow-none transition-colors"
               disabled={uploading}
             >
               {saved ? "Saved ✓" : "Save changes"}

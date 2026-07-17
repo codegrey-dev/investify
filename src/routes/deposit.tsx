@@ -223,7 +223,7 @@ function DepositPage() {
           <div className="flex flex-col gap-2 pt-6">
             <Button
               onClick={() => navigate({ to: "/tickets" })}
-              className="w-full rounded-full h-11 bg-accent text-accent-foreground hover:brightness-105 shadow-none transition-colors"
+              className="w-full rounded-full h-11 bg-black text-white hover:bg-gray-900 shadow-none transition-colors"
             >
               View History
             </Button>
@@ -348,7 +348,7 @@ function DepositPage() {
             <Button
               disabled={!previewUrl || submitting}
               onClick={confirmDeposit}
-              className="w-full rounded-sm h-11 bg-accent text-accent-foreground hover:brightness-105 shadow-none transition-colors"
+              className="w-full rounded-sm h-11 bg-black text-white hover:bg-gray-900 shadow-none transition-colors"
             >
               {submitting ? "Uploading receipt..." : "Confirm Payment"}
             </Button>

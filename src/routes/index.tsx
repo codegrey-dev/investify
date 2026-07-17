@@ -14,10 +14,18 @@ import {
 import growthAsset from "@/assets/growth.png";
 import rewardsAsset from "@/assets/rewards.png";
 import { useState, useEffect } from "react";
-import { getTickets, getWithdrawals, getInvestments, getUser, getBalance, getEarnings } from "@/lib/store";
+import { getTickets, getWithdrawals, getInvestments, getUser, getBalance, getEarnings, getReferralEarnings } from "@/lib/store";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { networkLogo, tickerLogo } from "@/lib/logos";
 import { packages } from "./invest";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -39,6 +47,7 @@ function HomePage() {
   const [balance, setBalance] = useState(0);
   const [earnings, setEarnings] = useState<any[]>([]);
   const [user, setUser] = useState<any>(null);
+  const [referralEarnings, setReferralEarnings] = useState<any[]>([]);
 
   useEffect(() => {
     async function checkAuth() {
@@ -57,13 +66,14 @@ function HomePage() {
     
     async function loadData() {
       try {
-        const [userData, ticketsData, withdrawalsData, investmentsData, balanceData, earningsData] = await Promise.all([
+        const [userData, ticketsData, withdrawalsData, investmentsData, balanceData, earningsData, referralEarningsData] = await Promise.all([
           getUser(),
           getTickets(),
           getWithdrawals(),
           getInvestments(),
           getBalance(),
           getEarnings(),
+          getReferralEarnings(),
         ]);
         setUser(userData);
         setTickets(ticketsData);
@@ -71,13 +81,14 @@ function HomePage() {
         setInvestments(investmentsData);
         setBalance(balanceData);
         setEarnings(earningsData);
+        setReferralEarnings(referralEarningsData);
       } catch (error) {
         console.error("Error loading data:", error);
       }
     }
 
     loadData();
-  }, [navigate]);
+  }, []);
 
   // Generate unique account number based on email / id
   const accountNumber = user?.email
@@ -95,6 +106,12 @@ function HomePage() {
 
   const investSum = investments.reduce((sum, inv) => sum + inv.amount, 0);
   const totalEarnings = earnings.reduce((sum, e) => sum + e.amount, 0);
+  const totalReferralEarnings = referralEarnings.reduce((sum, e) => sum + e.amount, 0);
+  
+  // Calculate balance breakdown
+  const actualBalance = depositSum - withdrawSum - investSum + totalEarnings;
+  const profitFromInvestment = totalEarnings;
+  const referralEarningsTotal = totalReferralEarnings;
 
   // Combine and sort activities by date descending
   const activities = [
@@ -155,9 +172,36 @@ function HomePage() {
           </div>
 
           <p className="text-xs text-muted-foreground mt-1">Your Balance</p>
-          <p className="text-[38px] font-extrabold tracking-tight tabular-nums leading-none">
-            GH₵{balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </p>
+          <div className="flex items-center gap-1">
+            {user ? (
+              <p className="text-[38px] font-extrabold tracking-tight tabular-nums leading-none">
+                GH₵{balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
+            ) : (
+              <Skeleton className="h-10 w-32" />
+            )}
+            <Select>
+              <SelectTrigger className="w-6 h-6 border-0 p-0 bg-transparent shadow-none focus:ring-0 focus:ring-offset-0 outline-none focus-visible:ring-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-background border-border shadow-none focus:ring-0 focus:ring-offset-0 outline-none focus-visible:ring-0">
+                <div className="p-2 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Actual Balance</span>
+                    <span className="font-semibold">GH₵{actualBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Investment Profit</span>
+                    <span className="font-semibold text-green-600">GH₵{profitFromInvestment.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Referral Earnings</span>
+                    <span className="font-semibold text-green-600">GH₵{referralEarningsTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
+              </SelectContent>
+            </Select>
+          </div>
 
           {monthlyGain > 0 && (
             <div className="mt-1 flex items-center rounded-full bg-[oklch(0.95_0.03_280)] px-3 py-1 text-xs font-semibold text-[oklch(0.4_0.12_280)]">

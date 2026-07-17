@@ -63,7 +63,7 @@ function WithdrawPage() {
       setBalance(balanceData);
     }
     loadData();
-  }, [navigate]);
+  }, []);
 
   const amount = parseFloat(amountStr) || 0;
 
@@ -153,7 +153,7 @@ function WithdrawPage() {
           <div className="pt-6">
             <Button
               onClick={() => navigate({ to: "/" })}
-              className="w-full rounded-full h-11 bg-accent text-accent-foreground hover:brightness-105 shadow-none transition-colors"
+              className="w-full rounded-full h-11 bg-black text-white hover:bg-gray-900 shadow-none transition-colors"
             >
               Back to portfolio
             </Button>

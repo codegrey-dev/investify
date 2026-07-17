@@ -41,7 +41,7 @@ function MorePage() {
       setUser(userData);
     }
     loadUser();
-  }, [navigate]);
+  }, []);
 
   const items = [
     { to: "/tickets", label: "Deposit tickets", icon: Ticket },
