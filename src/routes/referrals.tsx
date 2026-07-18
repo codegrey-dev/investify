@@ -138,7 +138,7 @@ function ReferralsPage() {
           <div className="flex-1 text-center py-3 bg-muted/50 rounded-sm">
             <DollarSign className="h-5 w-5 mx-auto text-primary mb-1" />
             <p className="text-xs text-muted-foreground">Earnings</p>
-            <p className="text-xl font-bold">${totalEarnings.toFixed(2)}</p>
+            <p className="text-xl font-bold">GH₵{totalEarnings.toFixed(2)}</p>
           </div>
         </div>
 
@@ -192,7 +192,7 @@ function ReferralsPage() {
                 `Initial (${referralInitialPercent}%)`
               )}
             </p>
-            <p className="text-lg font-bold">${initialEarnings.toFixed(2)}</p>
+            <p className="text-lg font-bold">GH₵{initialEarnings.toFixed(2)}</p>
           </div>
           <div className="flex-1 bg-muted/50 rounded-sm p-3 text-center">
             <TrendingUp className="h-5 w-5 mx-auto text-primary mb-1" />
@@ -203,7 +203,7 @@ function ReferralsPage() {
                 `Daily (${referralDailyPercent}%)`
               )}
             </p>
-            <p className="text-lg font-bold">${dailyEarnings.toFixed(2)}</p>
+            <p className="text-lg font-bold">GH₵{dailyEarnings.toFixed(2)}</p>
           </div>
         </div>
 
@@ -233,7 +233,7 @@ function ReferralsPage() {
                 <div key={earning.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                   <span className="text-sm">{earning.type === 'initial' ? 'Initial Bonus' : 'Daily Interest'}</span>
                   <div className="text-right">
-                    <span className="text-sm font-bold">${earning.amount.toFixed(2)}</span>
+                    <span className="text-sm font-bold">GH₵{earning.amount.toFixed(2)}</span>
                     <div className="text-xs text-muted-foreground">
                       {new Date(earning.createdAt).toLocaleDateString()}
                     </div>
