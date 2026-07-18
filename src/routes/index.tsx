@@ -14,7 +14,8 @@ import {
 import growthAsset from "@/assets/growth.png";
 import rewardsAsset from "@/assets/rewards.png";
 import { useState, useEffect } from "react";
-import { getTickets, getWithdrawals, getInvestments, getUser, getBalance, getEarnings, getReferralEarnings } from "@/lib/store";
+import { getTickets, getWithdrawals, getInvestments, getBalance, getEarnings, getReferralEarnings } from "@/lib/store";
+import { useUser } from "@/lib/UserContext";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { networkLogo, tickerLogo } from "@/lib/logos";
 import { packages } from "./invest";
@@ -48,6 +49,7 @@ function HomePage() {
   const [earnings, setEarnings] = useState<any[]>([]);
   const [user, setUser] = useState<any>(null);
   const [referralEarnings, setReferralEarnings] = useState<any[]>([]);
+  const { user: contextUser } = useUser();
 
   useEffect(() => {
     async function checkAuth() {
@@ -66,8 +68,7 @@ function HomePage() {
     
     async function loadData() {
       try {
-        const [userData, ticketsData, withdrawalsData, investmentsData, balanceData, earningsData, referralEarningsData] = await Promise.all([
-          getUser(),
+        const [ticketsData, withdrawalsData, investmentsData, balanceData, earningsData, referralEarningsData] = await Promise.all([
           getTickets(),
           getWithdrawals(),
           getInvestments(),
@@ -75,7 +76,7 @@ function HomePage() {
           getEarnings(),
           getReferralEarnings(),
         ]);
-        setUser(userData);
+        setUser(contextUser);
         setTickets(ticketsData);
         setWithdrawals(withdrawalsData);
         setInvestments(investmentsData);
@@ -88,7 +89,7 @@ function HomePage() {
     }
 
     loadData();
-  }, []);
+  }, [contextUser]);
 
   // Generate unique account number based on email / id
   const accountNumber = user?.email

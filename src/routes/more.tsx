@@ -8,7 +8,7 @@ import {
   Shield,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
-import { getUser, setUser } from "@/lib/store";
+import { useUser } from "@/lib/UserContext";
 import { Button } from "@/components/ui/button";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import telegramLogo from "@/assets/logos/telegram.webp";
@@ -21,7 +21,7 @@ export const Route = createFileRoute("/more")({
 
 function MorePage() {
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
+  const { user } = useUser();
 
   useEffect(() => {
     async function checkAuth() {
@@ -35,13 +35,7 @@ function MorePage() {
     }
     
     checkAuth();
-    
-    async function loadUser() {
-      const userData = await getUser();
-      setUser(userData);
-    }
-    loadUser();
-  }, []);
+  }, [navigate]);
 
   const items = [
     { to: "/tickets", label: "Deposit tickets", icon: Ticket },
@@ -54,7 +48,6 @@ function MorePage() {
     if (isSupabaseConfigured) {
       await supabase.auth.signOut();
     }
-    setUser(null);
     navigate({ to: "/sign-in" });
   }
 

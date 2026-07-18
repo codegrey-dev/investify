@@ -11,10 +11,10 @@ import {
   getInvestments,
   addInvestment,
   makeRef,
-  getUser,
   getBalance,
   grantReferralInitialBonus,
 } from "@/lib/store";
+import { useUser } from "@/lib/UserContext";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 export const Route = createFileRoute("/invest")({
@@ -168,6 +168,7 @@ function InvestPage() {
   const [balance, setBalance] = useState(0);
   const [user, setUser] = useState<any>(null);
   const [investments, setInvestments] = useState<any[]>([]);
+  const { user: contextUser } = useUser();
 
   // Compute live balance
   useEffect(() => {
@@ -184,24 +185,23 @@ function InvestPage() {
     checkAuth();
     
     async function loadData() {
-      const [userData, balanceData, investmentsData] = await Promise.all([
-        getUser(),
+      const [balanceData, investmentsData] = await Promise.all([
         getBalance(),
         getInvestments(),
       ]);
-      setUser(userData);
+      setUser(contextUser);
       setBalance(balanceData);
       setInvestments(investmentsData);
     }
     loadData();
-  }, []);
+  }, [contextUser]);
 
   async function purchasePackage(pkg: Pkg) {
     if (balance < pkg.price) return;
     
     setSubmitting(true);
     try {
-      const user = await getUser();
+      const user = contextUser;
       const reference = makeRef();
 
       if (isSupabaseConfigured && user?.id) {

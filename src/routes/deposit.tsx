@@ -12,15 +12,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  NETWORKS,
+import { NETWORKS,
   DEPOSIT_NUMBERS,
   addTicket,
   makeRef,
-  getUser,
+  getAppSettings,
   type Network,
 } from "@/lib/store";
+import { useUser } from "@/lib/UserContext";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/deposit")({
   component: DepositPage,
@@ -48,17 +49,19 @@ function DepositPage() {
   const [fileObj, setFileObj] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | undefined>();
   const [submitting, setSubmitting] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const { user: contextUser } = useUser();
   
   const [copied, setCopied] = useState(false);
   const [refCopied, setRefCopied] = useState(false);
+  const [settings, setSettings] = useState<Record<string, string>>({});
+  const [settingsLoading, setSettingsLoading] = useState(true);
 
   const amount = parseFloat(amountStr) || 0;
   const dest = DEPOSIT_NUMBERS[network];
   
-  // Calculate dynamic fee and limits from environment settings
-  const feePercent = parseFloat(import.meta.env.VITE_DEPOSIT_FEE_PERCENT || "1");
-  const minDeposit = parseFloat(import.meta.env.VITE_MIN_DEPOSIT || "10");
+  // Calculate dynamic fee and limits from database settings
+  const feePercent = parseFloat(settings.deposit_fee_percent || "1");
+  const minDeposit = parseFloat(settings.min_deposit || "10");
   
   const fee = amount * (feePercent / 100);
   const total = amount + fee;
@@ -78,11 +81,13 @@ function DepositPage() {
     
     checkAuth();
     
-    async function loadUser() {
-      const userData = await getUser();
-      setUser(userData);
+    async function loadSettings() {
+      const appSettings = await getAppSettings();
+      setSettings(appSettings);
+      setSettingsLoading(false);
     }
-    loadUser();
+    
+    loadSettings();
   }, [navigate]);
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -117,7 +122,7 @@ function DepositPage() {
     let finalScreenshotUrl = "";
 
     try {
-      const user = await getUser();
+      const user = contextUser;
       
       if (fileObj) {
         if (isSupabaseConfigured && user?.id) {
@@ -397,7 +402,7 @@ function DepositPage() {
                 value={amountStr}
                 onChange={(e) => {
                   const val = e.target.value.replace(/[^0-9]/g, "");
-                  setAmountStr(val || "0");
+                  setAmountStr(val);
                 }}
                 placeholder="0"
                 className="w-36 bg-transparent text-6xl font-extrabold leading-none tracking-tight text-center tabular-nums outline-none placeholder:text-muted-foreground"
@@ -412,11 +417,23 @@ function DepositPage() {
           </div>
 
           <div className="mt-3.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-            <span>GH₵{total.toFixed(2)} total</span>
-            <span>•</span>
-            <span>GH₵{fee.toFixed(2)} fee ({feePercent}%)</span>
-            <span>•</span>
-            <span>Min: GH₵{minDeposit}</span>
+            {settingsLoading ? (
+              <>
+                <Skeleton className="h-3 w-12" />
+                <span>•</span>
+                <Skeleton className="h-3 w-16" />
+                <span>•</span>
+                <Skeleton className="h-3 w-16" />
+              </>
+            ) : (
+              <>
+                <span>GH₵{total.toFixed(2)} total</span>
+                <span>•</span>
+                <span>GH₵{fee.toFixed(2)} fee ({feePercent}%)</span>
+                <span>•</span>
+                <span>Min: GH₵{minDeposit}</span>
+              </>
+            )}
             <Info className="h-3.5 w-3.5 text-blue-600 animate-pulse" />
           </div>
         </div>

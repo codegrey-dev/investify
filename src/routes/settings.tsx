@@ -4,7 +4,8 @@ import { PageHeader } from "@/components/PageHeader";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { getUser, setUser, type User } from "@/lib/store";
+import { setUser, type User } from "@/lib/store";
+import { useUser } from "@/lib/UserContext";
 import { Camera, Check, Loader2 } from "lucide-react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/settings")({
 
 function SettingsPage() {
   const navigate = useNavigate();
+  const { user: contextUser, refreshUser } = useUser();
   const [user, setLocal] = useState<User>({ fullName: "", email: "", phone: "", avatarUrl: "" });
   const [saved, setSaved] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -31,13 +33,13 @@ function SettingsPage() {
     }
     
     checkAuth();
-    
-    async function loadUser() {
-      const u = await getUser();
-      if (u) setLocal({ phone: "", avatarUrl: "", ...u });
+  }, [navigate]);
+
+  useEffect(() => {
+    if (contextUser) {
+      setLocal({ phone: "", avatarUrl: "", ...contextUser });
     }
-    loadUser();
-  }, []);
+  }, [contextUser]);
 
   async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -47,7 +49,7 @@ function SettingsPage() {
     let finalUrl = "";
 
     try {
-      const currentUser = await getUser();
+      const currentUser = contextUser;
       if (isSupabaseConfigured && currentUser?.id) {
         // Upload to Supabase Storage avatars bucket
         const fileExt = file.name.split(".").pop();
@@ -92,6 +94,7 @@ function SettingsPage() {
     e.preventDefault();
     setUser(user);
     setSaved(true);
+    refreshUser();
     setTimeout(() => setSaved(false), 1500);
   }
 

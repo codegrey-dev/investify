@@ -12,6 +12,7 @@ import { Smartphone, Camera } from "lucide-react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { UserProvider } from "../lib/UserContext";
 
 function NotFoundComponent() {
   return (
@@ -132,35 +133,37 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Desktop limitation screen */}
-      <div className="hidden md:flex flex-col items-center justify-center min-h-screen bg-background text-foreground p-8 text-center">
-        <div className="max-w-md space-y-6 flex flex-col items-center">
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight">Mobile Only Experience</h1>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Lumen is optimized exclusively for mobile devices. Please scan the QR code to open your account on your phone.
-            </p>
-          </div>
+      <UserProvider>
+        {/* Desktop limitation screen */}
+        <div className="hidden md:flex flex-col items-center justify-center min-h-screen bg-background text-foreground p-8 text-center">
+          <div className="max-w-md space-y-6 flex flex-col items-center">
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold tracking-tight">Mobile Only Experience</h1>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Lumen is optimized exclusively for mobile devices. Please scan the QR code to open your account on your phone.
+              </p>
+            </div>
 
-          <div className="bg-white p-4 rounded-xl border border-border w-fit shadow-sm">
-            <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(currentUrl)}`}
-              alt="QR Code Scan"
-              className="h-44 w-44"
-            />
-          </div>
+            <div className="bg-white p-4 rounded-xl border border-border w-fit shadow-sm">
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(currentUrl)}`}
+                alt="QR Code Scan"
+                className="h-44 w-44"
+              />
+            </div>
 
-          <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 px-4 py-2 rounded-sm border border-border/50">
-            <Camera className="h-4 w-4 text-muted-foreground" />
-            <span>Open your camera to scan</span>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 px-4 py-2 rounded-sm border border-border/50">
+              <Camera className="h-4 w-4 text-muted-foreground" />
+              <span>Open your camera to scan</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Render mobile view */}
-      <div className="block md:hidden">
-        <Outlet />
-      </div>
+        {/* Render mobile view */}
+        <div className="block md:hidden">
+          <Outlet />
+        </div>
+      </UserProvider>
     </QueryClientProvider>
   );
 }

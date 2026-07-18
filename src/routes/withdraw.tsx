@@ -12,7 +12,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { NETWORKS, addWithdrawal, makeRef, getUser, getBalance, type Network } from "@/lib/store";
+import { NETWORKS, addWithdrawal, makeRef, getBalance, getAppSettings, type Network } from "@/lib/store";
+import { useUser } from "@/lib/UserContext";
+import { Skeleton } from "@/components/ui/skeleton";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 export const Route = createFileRoute("/withdraw")({
@@ -38,7 +40,9 @@ function WithdrawPage() {
   const [reference] = useState(makeRef());
   const [submitting, setSubmitting] = useState(false);
   const [balance, setBalance] = useState(0);
-  const [user, setUser] = useState<any>(null);
+  const { user: contextUser } = useUser();
+  const [settings, setSettings] = useState<Record<string, string>>({});
+  const [settingsLoading, setSettingsLoading] = useState(true);
 
   // Compute live balance
   useEffect(() => {
@@ -55,21 +59,22 @@ function WithdrawPage() {
     checkAuth();
     
     async function loadData() {
-      const [userData, balanceData] = await Promise.all([
-        getUser(),
+      const [balanceData, appSettings] = await Promise.all([
         getBalance(),
+        getAppSettings(),
       ]);
-      setUser(userData);
       setBalance(balanceData);
+      setSettings(appSettings);
+      setSettingsLoading(false);
     }
     loadData();
   }, []);
 
   const amount = parseFloat(amountStr) || 0;
 
-  // Calculate dynamic fee and limits from environment settings
-  const feePercent = parseFloat(import.meta.env.VITE_WITHDRAW_FEE_PERCENT || "1");
-  const minWithdrawal = parseFloat(import.meta.env.VITE_MIN_WITHDRAWAL || "20");
+  // Calculate dynamic fee and limits from database settings
+  const feePercent = parseFloat(settings.withdraw_fee_percent || "1");
+  const minWithdrawal = parseFloat(settings.min_withdrawal || "20");
   
   const fee = amount * (feePercent / 100);
   const total = amount + fee;
@@ -195,7 +200,7 @@ function WithdrawPage() {
                 value={amountStr}
                 onChange={(e) => {
                   const val = e.target.value.replace(/[^0-9]/g, "");
-                  setAmountStr(val || "0");
+                  setAmountStr(val);
                 }}
                 placeholder="0"
                 className="w-36 bg-transparent text-6xl font-extrabold leading-none tracking-tight text-center tabular-nums outline-none placeholder:text-muted-foreground"
@@ -212,11 +217,23 @@ function WithdrawPage() {
           </div>
 
           <div className="mt-3.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-            <span>GH₵{total.toFixed(2)} total</span>
-            <span>•</span>
-            <span>GH₵{fee.toFixed(2)} fee ({feePercent}%)</span>
-            <span>•</span>
-            <span>Min: GH₵{minWithdrawal}</span>
+            {settingsLoading ? (
+              <>
+                <Skeleton className="h-3 w-12" />
+                <span>•</span>
+                <Skeleton className="h-3 w-16" />
+                <span>•</span>
+                <Skeleton className="h-3 w-16" />
+              </>
+            ) : (
+              <>
+                <span>GH₵{total.toFixed(2)} total</span>
+                <span>•</span>
+                <span>GH₵{fee.toFixed(2)} fee ({feePercent}%)</span>
+                <span>•</span>
+                <span>Min: GH₵{minWithdrawal}</span>
+              </>
+            )}
             <Info className="h-3.5 w-3.5 text-blue-600 animate-pulse" />
           </div>
         </div>

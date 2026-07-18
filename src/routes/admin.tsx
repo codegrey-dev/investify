@@ -7,7 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { getUser, getAllDeposits, getAllWithdrawals, getAllInvestments, getAllUsers, updateTicket, updateWithdrawal } from "@/lib/store";
+import { getAllDeposits, getAllWithdrawals, getAllInvestments, getAllUsers, updateTicket, updateWithdrawal } from "@/lib/store";
+import { useUser } from "@/lib/UserContext";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { networkLogo } from "@/lib/logos";
 import { Shield, Users, Wallet, ArrowUpRight, ArrowDownRight, Check, X, RefreshCw, TrendingUp, DollarSign, Activity, Eye, Clock } from "lucide-react";
@@ -36,7 +37,7 @@ function AdminPage() {
   const [selectedWithdrawal, setSelectedWithdrawal] = useState<any>(null);
   const [processingDeposit, setProcessingDeposit] = useState<string | null>(null);
   const [processingWithdrawal, setProcessingWithdrawal] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
+  const { user: contextUser } = useUser();
 
   // Load admin data - RLS policies will handle access control
   useEffect(() => {
@@ -50,8 +51,7 @@ function AdminPage() {
       }
       
       // Check if user is admin
-      const userData = await getUser();
-      if (userData?.role !== 'admin') {
+      if (contextUser?.role !== 'admin') {
         navigate({ to: '/' });
         return;
       }
@@ -62,14 +62,12 @@ function AdminPage() {
     async function loadAdminData() {
       setLoading(true);
       try {
-        const [userData, depositsData, withdrawalsData, usersData, investmentsData] = await Promise.all([
-          getUser(),
+        const [depositsData, withdrawalsData, usersData, investmentsData] = await Promise.all([
           getAllDeposits(),
           getAllWithdrawals(),
           getAllUsers(),
           getAllInvestments(),
         ]);
-        setUser(userData);
         setDeposits(depositsData);
         setWithdrawals(withdrawalsData);
         setUsers(usersData);

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Copy, Users, DollarSign, TrendingUp, Gift, Check } from "lucide-react";
-import { getReferralCode, getReferrals, getReferralEarnings } from "@/lib/store";
+import { getReferralCode, getReferrals, getReferralEarnings, getAppSettings } from "@/lib/store";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 export const Route = createFileRoute("/referrals")({
@@ -25,12 +25,12 @@ function ReferralsPage() {
   const [earnings, setEarnings] = useState<any[]>([]);
   const [copied, setCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [settings, setSettings] = useState<Record<string, string>>({});
+  const [settingsLoading, setSettingsLoading] = useState(true);
 
   useEffect(() => {
     async function checkAuth() {
       if (!isSupabaseConfigured) {
-        setLoading(false);
         return;
       }
       
@@ -45,20 +45,21 @@ function ReferralsPage() {
     
     async function loadData() {
       try {
-        const [codeData, referralsData, earningsData] = await Promise.all([
+        const [codeData, referralsData, earningsData, appSettings] = await Promise.all([
           getReferralCode(),
           getReferrals(),
           getReferralEarnings(),
+          getAppSettings(),
         ]);
         
         if (codeData) setReferralCode(codeData.code);
         setReferrals(referralsData);
         setEarnings(earningsData);
+        setSettings(appSettings);
+        setSettingsLoading(false);
       } catch (error) {
         console.error("Error loading referral data:", error);
         setReferralCode("Not available");
-      } finally {
-        setLoading(false);
       }
     }
     
@@ -117,25 +118,10 @@ function ReferralsPage() {
   const totalEarnings = earnings.reduce((sum, e) => sum + e.amount, 0);
   const initialEarnings = earnings.filter(e => e.type === 'initial').reduce((sum, e) => sum + e.amount, 0);
   const dailyEarnings = earnings.filter(e => e.type === 'daily').reduce((sum, e) => sum + e.amount, 0);
-
-  if (loading) {
-    return (
-      <div className="phone-frame flex flex-col bg-background min-h-screen select-none">
-        <PageHeader title="Referrals" subtitle="Earn rewards" backTo="/more" />
-        <div className="flex-1 px-5 pt-4 pb-8 space-y-4">
-          <div className="flex gap-4">
-            <Skeleton className="flex-1 h-16 rounded-sm" />
-            <Skeleton className="flex-1 h-16 rounded-sm" />
-          </div>
-          <Skeleton className="h-12 w-full rounded-sm" />
-          <div className="flex gap-4">
-            <Skeleton className="flex-1 h-16 rounded-sm" />
-            <Skeleton className="flex-1 h-16 rounded-sm" />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  
+  // Get referral percentages from database settings
+  const referralInitialPercent = parseFloat(settings.referral_initial_percent || "5");
+  const referralDailyPercent = parseFloat(settings.referral_daily_percent || "1");
 
   return (
     <div className="phone-frame flex flex-col bg-background min-h-screen select-none">
@@ -160,14 +146,19 @@ function ReferralsPage() {
         <div className="text-center py-4">
           <p className="text-xs text-muted-foreground mb-2">Your referral code</p>
           <div className="flex items-center justify-center gap-2">
-            <span className="font-mono font-bold text-3xl tracking-wider">
-              {referralCode || "Loading..."}
-            </span>
+            {referralCode ? (
+              <span className="font-mono font-bold text-3xl tracking-wider">
+                {referralCode}
+              </span>
+            ) : (
+              <Skeleton className="h-9 w-32" />
+            )}
             <Button
               onClick={copyReferralCode}
               variant="ghost"
               size="icon"
               className="h-8 w-8"
+              disabled={!referralCode}
             >
               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             </Button>
@@ -177,13 +168,14 @@ function ReferralsPage() {
         {/* Referral Link */}
         <div className="flex items-center gap-2">
           <div className="flex-1 border border-border rounded-[10px] py-3 px-3 text-xs font-mono truncate">
-            {referralCode ? `${window.location.origin}/sign-up?ref=${referralCode}` : "Loading..."}
+            {referralCode ? `${window.location.origin}/sign-up?ref=${referralCode}` : <Skeleton className="h-4 w-full" />}
           </div>
           <Button
             onClick={copyReferralLink}
             variant="ghost"
             size="icon"
             className="h-9 w-9 shrink-0 border border-border rounded-[10px]"
+            disabled={!referralCode}
           >
             {linkCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
           </Button>
@@ -193,12 +185,24 @@ function ReferralsPage() {
         <div className="flex gap-4">
           <div className="flex-1 bg-muted/50 rounded-sm p-3 text-center">
             <Gift className="h-5 w-5 mx-auto text-primary mb-1" />
-            <p className="text-xs text-muted-foreground">Initial (5%)</p>
+            <p className="text-xs text-muted-foreground">
+              {settingsLoading ? (
+                <Skeleton className="h-3 w-12" />
+              ) : (
+                `Initial (${referralInitialPercent}%)`
+              )}
+            </p>
             <p className="text-lg font-bold">${initialEarnings.toFixed(2)}</p>
           </div>
           <div className="flex-1 bg-muted/50 rounded-sm p-3 text-center">
             <TrendingUp className="h-5 w-5 mx-auto text-primary mb-1" />
-            <p className="text-xs text-muted-foreground">Daily (1%)</p>
+            <p className="text-xs text-muted-foreground">
+              {settingsLoading ? (
+                <Skeleton className="h-3 w-12" />
+              ) : (
+                `Daily (${referralDailyPercent}%)`
+              )}
+            </p>
             <p className="text-lg font-bold">${dailyEarnings.toFixed(2)}</p>
           </div>
         </div>
@@ -244,8 +248,20 @@ function ReferralsPage() {
         <div className="bg-muted/50 rounded-sm p-4 space-y-1">
           <p className="text-xs font-bold text-foreground">How it works</p>
           <p className="text-xs text-muted-foreground">1. Share your code with friends</p>
-          <p className="text-xs text-muted-foreground">2. Get 5% when they invest</p>
-          <p className="text-xs text-muted-foreground">3. Earn 1% daily on their investments</p>
+          <p className="text-xs text-muted-foreground">
+            {settingsLoading ? (
+              <Skeleton className="h-3 w-24 inline-block" />
+            ) : (
+              `2. Get ${referralInitialPercent}% when they invest`
+            )}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {settingsLoading ? (
+              <Skeleton className="h-3 w-32 inline-block" />
+            ) : (
+              `3. Earn ${referralDailyPercent}% daily on their investments`
+            )}
+          </p>
         </div>
       </div>
     </div>
