@@ -559,7 +559,7 @@ function AdminPage() {
                   step="0.1"
                   value={settings.deposit_fee_percent || ""}
                   onChange={(e) => handleSettingChange("deposit_fee_percent", e.target.value)}
-                  className="rounded-sm h-11"
+                  className="rounded-sm h-11 border border-border shadow-none"
                 />
               </div>
 
@@ -571,7 +571,7 @@ function AdminPage() {
                   step="0.01"
                   value={settings.min_deposit || ""}
                   onChange={(e) => handleSettingChange("min_deposit", e.target.value)}
-                  className="rounded-sm h-11"
+                  className="rounded-sm h-11 border border-border shadow-none"
                 />
               </div>
 
@@ -583,7 +583,7 @@ function AdminPage() {
                   step="0.1"
                   value={settings.withdraw_fee_percent || ""}
                   onChange={(e) => handleSettingChange("withdraw_fee_percent", e.target.value)}
-                  className="rounded-sm h-11"
+                  className="rounded-sm h-11 border border-border shadow-none"
                 />
               </div>
 
@@ -595,7 +595,7 @@ function AdminPage() {
                   step="0.01"
                   value={settings.min_withdrawal || ""}
                   onChange={(e) => handleSettingChange("min_withdrawal", e.target.value)}
-                  className="rounded-sm h-11"
+                  className="rounded-sm h-11 border border-border shadow-none"
                 />
               </div>
 
@@ -607,7 +607,7 @@ function AdminPage() {
                   step="0.1"
                   value={settings.referral_initial_percent || ""}
                   onChange={(e) => handleSettingChange("referral_initial_percent", e.target.value)}
-                  className="rounded-sm h-11"
+                  className="rounded-sm h-11 border border-border shadow-none"
                 />
               </div>
 
@@ -619,7 +619,7 @@ function AdminPage() {
                   step="0.1"
                   value={settings.referral_daily_percent || ""}
                   onChange={(e) => handleSettingChange("referral_daily_percent", e.target.value)}
-                  className="rounded-sm h-11"
+                  className="rounded-sm h-11 border border-border shadow-none"
                 />
               </div>
 
@@ -630,7 +630,7 @@ function AdminPage() {
                   type="url"
                   value={settings.whatsapp_url || ""}
                   onChange={(e) => handleSettingChange("whatsapp_url", e.target.value)}
-                  className="rounded-sm h-11"
+                  className="rounded-sm h-11 border border-border shadow-none"
                   placeholder="https://wa.me/233240001234"
                 />
               </div>
@@ -642,7 +642,7 @@ function AdminPage() {
                   type="url"
                   value={settings.telegram_url || ""}
                   onChange={(e) => handleSettingChange("telegram_url", e.target.value)}
-                  className="rounded-sm h-11"
+                  className="rounded-sm h-11 border border-border shadow-none"
                   placeholder="https://t.me/lumen_invest"
                 />
               </div>
@@ -654,7 +654,7 @@ function AdminPage() {
                   type="email"
                   value={settings.support_email || ""}
                   onChange={(e) => handleSettingChange("support_email", e.target.value)}
-                  className="rounded-sm h-11"
+                  className="rounded-sm h-11 border border-border shadow-none"
                   placeholder="support@lumen.invest"
                 />
               </div>
