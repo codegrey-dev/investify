@@ -6,12 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { getAllDeposits, getAllWithdrawals, getAllInvestments, getAllUsers, updateTicket, updateWithdrawal } from "@/lib/store";
+import { getAllDeposits, getAllWithdrawals, getAllInvestments, getAllUsers, updateTicket, updateWithdrawal, getAppSettings, updateAppSettings } from "@/lib/store";
 import { useUser } from "@/lib/UserContext";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { networkLogo } from "@/lib/logos";
-import { Shield, Users, Wallet, ArrowUpRight, ArrowDownRight, Check, X, RefreshCw, TrendingUp, DollarSign, Activity, Eye, Clock } from "lucide-react";
+import { Shield, Users, Wallet, ArrowUpRight, ArrowDownRight, Check, X, RefreshCw, TrendingUp, DollarSign, Activity, Eye, Clock, Settings as SettingsIcon } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   component: AdminPage,
@@ -23,7 +25,7 @@ export const Route = createFileRoute("/admin")({
   }),
 });
 
-type TabType = "pending" | "deposits" | "withdrawals" | "users" | "investments";
+type TabType = "pending" | "deposits" | "withdrawals" | "users" | "investments" | "settings";
 
 function AdminPage() {
   const navigate = useNavigate();
@@ -38,6 +40,8 @@ function AdminPage() {
   const [processingDeposit, setProcessingDeposit] = useState<string | null>(null);
   const [processingWithdrawal, setProcessingWithdrawal] = useState<string | null>(null);
   const { user: contextUser } = useUser();
+  const [settings, setSettings] = useState<Record<string, string>>({});
+  const [savingSettings, setSavingSettings] = useState(false);
 
   // Load admin data - RLS policies will handle access control
   useEffect(() => {
@@ -62,16 +66,18 @@ function AdminPage() {
     async function loadAdminData() {
       setLoading(true);
       try {
-        const [depositsData, withdrawalsData, usersData, investmentsData] = await Promise.all([
+        const [depositsData, withdrawalsData, usersData, investmentsData, settingsData] = await Promise.all([
           getAllDeposits(),
           getAllWithdrawals(),
           getAllUsers(),
           getAllInvestments(),
+          getAppSettings(),
         ]);
         setDeposits(depositsData);
         setWithdrawals(withdrawalsData);
         setUsers(usersData);
         setInvestments(investmentsData);
+        setSettings(settingsData);
       } catch (error) {
         console.error("Error loading admin data:", error);
       } finally {
@@ -97,6 +103,27 @@ function AdminPage() {
     } finally {
       setProcessingDeposit(null);
     }
+  }
+
+  async function handleSaveSettings() {
+    setSavingSettings(true);
+    try {
+      const success = await updateAppSettings(settings);
+      if (success) {
+        alert("Settings saved successfully!");
+      } else {
+        alert("Failed to save settings");
+      }
+    } catch (error) {
+      console.error("Error saving settings:", error);
+      alert("Failed to save settings");
+    } finally {
+      setSavingSettings(false);
+    }
+  }
+
+  function handleSettingChange(key: string, value: string) {
+    setSettings(prev => ({ ...prev, [key]: value }));
   }
 
   async function handleWithdrawalAction(id: string, status: "confirmed" | "rejected") {
@@ -203,7 +230,7 @@ function AdminPage() {
 
         {/* Tabs */}
         <div className="flex gap-2 overflow-x-auto pb-1">
-          {(["pending", "deposits", "withdrawals", "users", "investments"] as TabType[]).map((tab) => (
+          {(["pending", "deposits", "withdrawals", "users", "investments", "settings"] as TabType[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -513,6 +540,133 @@ function AdminPage() {
                 })}
               </ul>
             )}
+          </div>
+        )}
+
+        {activeTab === "settings" && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <SettingsIcon className="h-4 w-4 text-muted-foreground" />
+              <h3 className="text-sm font-semibold">App Settings</h3>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="deposit_fee_percent">Deposit Fee Percent (%)</Label>
+                <Input
+                  id="deposit_fee_percent"
+                  type="number"
+                  step="0.1"
+                  value={settings.deposit_fee_percent || ""}
+                  onChange={(e) => handleSettingChange("deposit_fee_percent", e.target.value)}
+                  className="rounded-sm h-11"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="min_deposit">Minimum Deposit (GH₵)</Label>
+                <Input
+                  id="min_deposit"
+                  type="number"
+                  step="0.01"
+                  value={settings.min_deposit || ""}
+                  onChange={(e) => handleSettingChange("min_deposit", e.target.value)}
+                  className="rounded-sm h-11"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="withdraw_fee_percent">Withdrawal Fee Percent (%)</Label>
+                <Input
+                  id="withdraw_fee_percent"
+                  type="number"
+                  step="0.1"
+                  value={settings.withdraw_fee_percent || ""}
+                  onChange={(e) => handleSettingChange("withdraw_fee_percent", e.target.value)}
+                  className="rounded-sm h-11"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="min_withdrawal">Minimum Withdrawal (GH₵)</Label>
+                <Input
+                  id="min_withdrawal"
+                  type="number"
+                  step="0.01"
+                  value={settings.min_withdrawal || ""}
+                  onChange={(e) => handleSettingChange("min_withdrawal", e.target.value)}
+                  className="rounded-sm h-11"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="referral_initial_percent">Referral Initial Percent (%)</Label>
+                <Input
+                  id="referral_initial_percent"
+                  type="number"
+                  step="0.1"
+                  value={settings.referral_initial_percent || ""}
+                  onChange={(e) => handleSettingChange("referral_initial_percent", e.target.value)}
+                  className="rounded-sm h-11"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="referral_daily_percent">Referral Daily Percent (%)</Label>
+                <Input
+                  id="referral_daily_percent"
+                  type="number"
+                  step="0.1"
+                  value={settings.referral_daily_percent || ""}
+                  onChange={(e) => handleSettingChange("referral_daily_percent", e.target.value)}
+                  className="rounded-sm h-11"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="whatsapp_url">WhatsApp URL</Label>
+                <Input
+                  id="whatsapp_url"
+                  type="url"
+                  value={settings.whatsapp_url || ""}
+                  onChange={(e) => handleSettingChange("whatsapp_url", e.target.value)}
+                  className="rounded-sm h-11"
+                  placeholder="https://wa.me/233240001234"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="telegram_url">Telegram URL</Label>
+                <Input
+                  id="telegram_url"
+                  type="url"
+                  value={settings.telegram_url || ""}
+                  onChange={(e) => handleSettingChange("telegram_url", e.target.value)}
+                  className="rounded-sm h-11"
+                  placeholder="https://t.me/lumen_invest"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="support_email">Support Email</Label>
+                <Input
+                  id="support_email"
+                  type="email"
+                  value={settings.support_email || ""}
+                  onChange={(e) => handleSettingChange("support_email", e.target.value)}
+                  className="rounded-sm h-11"
+                  placeholder="support@lumen.invest"
+                />
+              </div>
+
+              <Button
+                onClick={handleSaveSettings}
+                disabled={savingSettings}
+                className="w-full rounded-sm h-11"
+              >
+                {savingSettings ? "Saving..." : "Save Settings"}
+              </Button>
+            </div>
           </div>
         )}
       </div>

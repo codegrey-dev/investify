@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { useUser } from "@/lib/UserContext";
+import { getAppSettings } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import telegramLogo from "@/assets/logos/telegram.webp";
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/more")({
 function MorePage() {
   const navigate = useNavigate();
   const { user } = useUser();
+  const [settings, setSettings] = useState<Record<string, string>>({});
 
   useEffect(() => {
     async function checkAuth() {
@@ -35,6 +37,12 @@ function MorePage() {
     }
     
     checkAuth();
+    
+    async function loadSettings() {
+      const appSettings = await getAppSettings();
+      setSettings(appSettings);
+    }
+    loadSettings();
   }, [navigate]);
 
   const items = [
@@ -109,7 +117,7 @@ function MorePage() {
             
             <div className="space-y-2">
               <a
-                href="https://wa.me/233240001234"
+                href={settings.whatsapp_url || "https://wa.me/233240001234"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 p-4 rounded-xl border border-border bg-transparent hover:bg-muted/30 transition-colors"
@@ -118,7 +126,7 @@ function MorePage() {
                 <span className="text-xs font-bold text-foreground">WhatsApp</span>
               </a>
               <a
-                href="https://t.me/lumen_invest"
+                href={settings.telegram_url || "https://t.me/lumen_invest"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 p-4 rounded-xl border border-border bg-transparent hover:bg-muted/30 transition-colors"
@@ -127,7 +135,7 @@ function MorePage() {
                 <span className="text-xs font-bold text-foreground">Telegram</span>
               </a>
               <a
-                href="mailto:support@lumen.invest"
+                href={`mailto:${settings.support_email || "support@lumen.invest"}`}
                 className="flex items-center gap-3 p-4 rounded-xl border border-border bg-transparent hover:bg-muted/30 transition-colors"
               >
                 <div className="grid h-8 w-8 place-items-center rounded-full bg-primary/10 text-primary shrink-0">

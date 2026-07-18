@@ -793,6 +793,51 @@ export function makeRef() {
   return "LMN-" + Math.random().toString(36).slice(2, 8).toUpperCase();
 }
 
+// Settings functions
+export async function getAppSettings(): Promise<Record<string, string>> {
+  if (!isSupabaseConfigured) return {};
+  
+  try {
+    const { data, error } = await supabase.functions.invoke('get-settings');
+    
+    if (error) {
+      console.error("Error fetching app settings:", error);
+      return {};
+    }
+    
+    return data?.settings || {};
+  } catch (error) {
+    console.error("Error fetching app settings:", error);
+    return {};
+  }
+}
+
+export async function updateAppSettings(settings: Record<string, string>): Promise<boolean> {
+  if (!isSupabaseConfigured) return false;
+  
+  try {
+    const { error } = await supabase
+      .from('app_settings')
+      .upsert(
+        Object.entries(settings).map(([key, value]) => ({
+          key,
+          value,
+        })),
+        { onConflict: 'key' }
+      );
+    
+    if (error) {
+      console.error("Error updating app settings:", error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error updating app settings:", error);
+    return false;
+  }
+}
+
 export const NETWORKS: { id: Network; label: string }[] = [
   { id: "MTN", label: "MTN" },
   { id: "Telecel", label: "Telecel" },
