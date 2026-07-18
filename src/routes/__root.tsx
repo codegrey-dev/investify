@@ -8,7 +8,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
-import { Smartphone, Camera } from "lucide-react";
+import { Smartphone, Camera, Maximize2 } from "lucide-react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -131,6 +131,12 @@ function RootComponent() {
     }
   }, []);
 
+  function resizeToMobile() {
+    if (typeof window !== "undefined" && window.outerWidth) {
+      window.resizeTo(430, Math.min(window.screen.height - 100, 900));
+    }
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <UserProvider>
@@ -154,7 +160,7 @@ function RootComponent() {
 
             <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 px-4 py-2 rounded-sm border border-border/50">
               <Camera className="h-4 w-4 text-muted-foreground" />
-              <span>Open your camera to scan</span>
+              <span>Open your camera to scan, or <button onClick={resizeToMobile} className="font-medium text-foreground hover:underline">resize window</button> to mobile</span>
             </div>
           </div>
         </div>
