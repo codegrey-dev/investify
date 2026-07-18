@@ -84,16 +84,6 @@
   }
 }
 
-/* Prevent iOS from pushing page up when keyboard appears */
-@supports (-webkit-touch-callout: none) {
-  html, body {
-    height: 100%;
-    overflow: hidden;
-    position: fixed;
-    width: 100%;
-  }
-}
-
 @utility phone-frame {
   max-width: 430px;
   margin-inline: auto;
